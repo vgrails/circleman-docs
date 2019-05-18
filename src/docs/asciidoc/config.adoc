@@ -1,0 +1,96 @@
+:!webfonts:
+:imagesdir: ./images
+:sectnums:
+
+### 背景概述
+
+框架的配置整体基于 `ConfigSlurper` 语法。对于 `约定由于配置` 的框架来说，需要配置的项目非常有限，主要存放在以下目录：
+
+`/src/main/resources/config`
+
+配置的项目包含：
+
+* 框架配置
+* DB连接参数
+* 元模型
+
+### 核心配置
+
+运行模式，可能影响程序的行为和逻辑，主要包括：
+
+* 开发("development")
+* 单元测试("test")
+* 集成测试("integration")
+* 生产("production")
+
+HBM2DDL，影响数据库Schema、数据的管理方法，主要支持：
+
+* create: 每次运行清除数据库和数据，重新创建Schema
+* create-crop: 类似create，但是sessionFactory一关闭，表就删除
+* update: 常用，会自动更新表结构，不删除数据
+* validate: 验证表结构，不创建新表
+
+配置示例：
+[source,groovy]
+----
+environment = "development" <1>
+
+framework {
+
+    port = 8080
+    reflectionScan = "com.circleman"    //reflections的扫描起点
+
+    app {
+        name = "demo" <2>
+        fullName = "Circleman演示系统" <3>
+        version = "1.0.0"
+    }
+}
+
+database {
+    url = 'jdbc:h2:mem:demo' <4>
+    username = ""
+    password = ""
+    hbm2ddl = "create-crop"
+}
+----
+<1> 当前运行环境
+<2> 应用名称
+<3> 应用全名，显示在Banner
+<4> 数据库URL
+
+TIP: 该部分语法和约束可以参考 http://docs.groovy-lang.org/docs/next/html/gapi/groovy/util/ConfigSlurper.html[ConfigSlurper]
+
+### 环境敏感配置
+
+代码示例：
+[source,groovy]
+----
+
+environment = "production" <1>
+
+database {
+    hbm2ddl = "create"
+}
+
+environments {
+    production {
+        database {
+            hbm2ddl = "update" <2>
+        }
+    }
+}
+----
+<1> 定义了默认值
+<2> 定义了环境敏感的参数值，因此此时：`database.hbm2ddl` 的值为：'update'
+
+### 获取配置
+
+代码示例：
+[source,groovy]
+----
+
+String  appName = getConfig("framework.app.name") <1>
+
+----
+<1> 通过全局函数getConfig可以获取配置的值
