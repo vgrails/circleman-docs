@@ -1,0 +1,63 @@
+buildscript {
+    repositories {
+        mavenLocal()
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'org.asciidoctor:asciidoctor-gradle-plugin:1.5.9.2'
+        classpath 'org.asciidoctor:asciidoctorj-pdf:1.5.0-alpha.17'
+        classpath 'org.jruby:jruby-complete:1.7.26'
+        classpath 'com.github.jruby-gradle:jruby-gradle-plugin:0.1.11'
+        classpath 'com.github.ben-manes:gradle-versions-plugin:0.7'
+        classpath 'com.bluepapa32:gradle-watch-plugin:0.1.4'
+    }
+}
+
+plugins {
+    id 'org.asciidoctor.convert' version '1.5.9.2'
+}
+
+asciidoctorj {
+    version = '1.5.8.1'
+}
+
+apply plugin: "base"
+apply plugin: "java"
+apply plugin: 'org.asciidoctor.convert'
+apply plugin: 'com.github.jruby-gradle.base'
+apply plugin: 'com.github.ben-manes.versions'
+
+dependencies {
+
+    compile 'org.asciidoctor:asciidoctorj:2.0.0'
+    
+    gems 'rubygems:asciidoctor-diagram:1.5.16'
+}
+
+asciidoctor {
+    dependsOn jrubyPrepareGems
+
+    requires = ['asciidoctor-diagram']
+    gemPath = jrubyPrepareGems.outputDir
+
+    description = 'circleman-docs'
+    group = 'documentation'
+
+    backends = ['html5']
+
+    attributes =[
+            'source-highlighter': 'coderay',
+            'imagesdir': 'images',
+            toc                 : 'left',
+            'toc-title'           : '目录',
+            icons                    : 'font',
+            linkattrs               : true,
+            encoding                : 'utf-8',
+            'setanchors': '',
+            'idprefix': '',
+            'idseparator': '-',
+            'docinfo1': '',
+            'graphvizdot':'C:\\opt\\graphviz\\bin\\dot.exe'
+        ]
+}

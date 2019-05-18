@@ -1,0 +1,145 @@
+:!webfonts:
+:imagesdir: ./images
+:sectnums:
+
+### 元模型(MetaDomain)
+
+该模块基于DSL创建，可用于生成：数据模型、表单模型等
+
+* 类属性
+* 属性约束
+* 相互关系(1:1, 1:N, M:N)
+
+代码示例：
+[source,groovy]
+----
+MetaDomain metaOrganization=new MetaDomainBuilder().domain(name:"Organization", locale: "组织", searchType: "ajax", searchFields: ["name", "description"]) {
+            field  name: 'name', locale: "名称"
+            field name: 'description', locale: "简介"
+} //<1>
+
+metaOrganization.GetMetaField('name')
+            .metaType(MetaType.STRING)
+            .min(2)
+            .max(32)
+            .blank(false) <2>
+....
+----
+<1> 通过DSL定义元模型(MetaDomain)
+<2> 通过DSL定义元属性(MetaField)
+
+### 数据模型(Domain Model)
+
+该模块继承于GORM from Grails建模，所不同的是数据模型可以由Codegen基于元模型生成基础，该部分主要包括：
+
+* 类属性
+* 属性约束
+* 相互关系(1:1, 1:N, M:N)
+* 索引定义
+* 计算字段
+
+代码示例：
+[source,groovy]
+----
+class Student{
+    String name
+    Area hometown <1>
+
+    //约束
+    static constraints = {
+        name minSize:2, maxSize:64, nullable:false
+        hometown attributes:[associationType: 'one-to-many', nullable:true] <2>
+        ...
+    }
+}
+
+----
+<1> 在`学生`对象中声明对`地区`对象的应用
+<2> 定义该关联类型为`one-to-many`
+
+TIP: 该部分语法和约束可以参考 http://gorm.grails.org/doc[GORM]
+
+### 布局DSL(LayoutDSL)
+
+该模块主要用于定义UI模板，主要包括：
+
+* 可以嵌套的布局
+* 组件及其属性
+* 事件响应
+
+代码示例：
+[source,groovy]
+----
+MetaLayout l= new MetaLayoutBuilder().hbox(id: "left-right"){
+            tree(id: "leftTree")
+            vbox(id: "rightvbox"){
+                toolbar(id: "toolbar")
+                grid(id: "grid")
+            }
+
+            id('tree').load('ajax')=true <2>
+
+            on('tree', 'leftClick'){ id ->
+                on('tree').refresh().withParams("parent=", id)
+            }<3>
+}<1>
+
+
+----
+<1> 定义了一个左树右表的典型布局
+<2> 定义了树组件的默认加载方式
+<3> 定义了单击左树，刷新右表的事件响应机制
+
+### UI组件(Component)
+
+在界面上自包含的最小交互单元，如：图，数据表，表单，搜索框，工具栏，导航条等
+
+代码示例：
+[source,groovy]
+----
+//图ID,图类型，值, 标签, 数据源URL, 定时刷新周期
+#chart('ch1', 'line', 'dollars', 'count', '/chart', 5000); <1>
+
+----
+<1> 定义了一个图表
+
+显示效果
+
+image::component_chart.png[]
+
+### 业务闭包(Route)
+
+业务闭包处理来自某个URL的响应，格式支持：JSON, HTML
+
+代码示例：
+[source,groovy]
+----
+
+GET "/employee/detail" , <1>
+{
+    Request request, <2>
+    Response response, <3>
+    Map params -> <4>
+            Map model = [code:0]
+            long id = Long.parseLong(params.id)
+
+            Employee e
+            Employee.withTransaction {
+                e = Employee.findById(id) <5>
+            }
+
+            if(e == null || e.id != id){
+                model = [code: -1, message: "对象不存在"]
+            }else{
+                model = [code: -1, data: e]
+            }
+
+            json(model) <6>
+}
+----
+<1> URL或URL匹配Pattern
+<2> 请求对象，可用于获取cookie, ip等
+<3> 响应对象
+<4> 请求参数
+<5> GORM调用
+<6> 响应转换
