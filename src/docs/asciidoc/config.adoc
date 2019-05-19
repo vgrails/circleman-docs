@@ -2,7 +2,7 @@
 :imagesdir: ./images
 :sectnums:
 
-### 背景概述
+### 原理
 
 框架的配置整体基于 `ConfigSlurper` 语法。对于 `约定由于配置` 的框架来说，需要配置的项目非常有限，主要存放在以下目录：
 
@@ -13,6 +13,8 @@
 * 框架配置
 * DB连接参数
 * 元模型
+
+NOTE: AppConfig.groovy内的配置都有默认值，框架可以在该文件不存在的情况下顺利启动
 
 ### 核心配置
 
@@ -59,7 +61,7 @@ database {
 <3> 应用全名，显示在Banner
 <4> 数据库URL
 
-TIP: 该部分语法和约束可以参考 http://docs.groovy-lang.org/docs/next/html/gapi/groovy/util/ConfigSlurper.html[ConfigSlurper]
+NOTE: 该部分语法和约束可以参考 http://docs.groovy-lang.org/docs/next/html/gapi/groovy/util/ConfigSlurper.html[ConfigSlurper]
 
 ### 环境敏感配置
 
@@ -84,13 +86,30 @@ environments {
 <1> 定义了默认值
 <2> 定义了环境敏感的参数值，因此此时：`database.hbm2ddl` 的值为：'update'
 
-### 获取配置
+
+### 新增配置
+
+，值类型可以是任意类型，乃至闭包
+代码示例：
+[source,groovy]
+----
+//在AppConfig.groovy中添加
+company.department.name = "dummy" <1>
+
+----
+<1> 按照键值对的方式增加配置项
+
+TIP: 通过闭包可以方便实现业务特性的注入
+
+### 读取配置值
 
 代码示例：
 [source,groovy]
 ----
 
 String  appName = getConfig("framework.app.name") <1>
+String  name = getConfig("company.department.name") <2>
 
 ----
 <1> 通过全局函数getConfig可以获取配置的值
+<2> 读取自定义配置
