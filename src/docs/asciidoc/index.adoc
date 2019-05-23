@@ -24,6 +24,10 @@ include::concepts.adoc[]
 == 配置
 include::config.adoc[]
 
+[[models]]
+== 元模型
+include::models.adoc[]
+
 [[tutorial]]
 == 快速上手
 include::tutorial.adoc[]

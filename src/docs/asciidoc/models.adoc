@@ -1,0 +1,178 @@
+:!webfonts:
+:imagesdir: ./images
+:sectnums:
+
+### 元模型(MetaDomain)
+
+元模型基于DSL创建，可用于生成：ORM模型、表单模型等，包括：
+
+* 属性及其类型
+* 约束
+* 关系
+* UI展现定制
+* 本地化等
+
+### 元模型构建示例
+
+构建一个元模型，需要提供：模型约束、属性约束。
+
+代码示例：
+[source,groovy]
+----
+MetaDomain metaOrg=new MetaDomainBuilder().domain(
+    name:"Org", <1>
+    locale: "组织", <2>
+    pkg: "com.circleman.domains", <3>
+    searchable: ["name", "description"], <4>
+    sortable: ["name", "description"])  <5>
+{
+            field  name: 'name', locale: "名称" <6>
+            field name: 'description', locale: "简介"
+}
+
+metaOrg.GetMetaField('name')
+            .type("String") <7>
+            .max(32)
+
+metaOrg.GetMetaField('id').locale("组织ID") <8>
+metaOrg.searchable.remove(1) <9>
+
+println metaOrg.validate() <10>
+
+----
+<1> 定义Org模型
+<2> 定义模型本地化翻译
+<3> 包名
+<4> 可搜索属性
+<5> 可排序属性
+<6> 添加字段
+<7> 定制字段
+<8> 定制ID标签
+<9> 定制可搜索
+<10> 校验
+
+TIP: 当前环境如果处于开发期，框架会自动验证模型，给出错误提示
+
+### MetaDomain属性表
+
+[cols="1,2,4"]
+|===
+|名称|功能|备注
+|name
+|属性名称
+|非空、唯一、首字母大写，如：Organization
+|locale
+|本地化翻译
+|可空(如空则使用name值)
+|pkg
+|包名
+|如：com.circleman.domains
+|fields
+|属性列表
+|有序，id属性已经默认插入
+|sortable
+|可排序字段表
+|无序，主要由于表格控件的字段排序
+|searchable
+|可搜索字段列表
+|无序，主要由于搜索控件展示
+|===
+
+
+### MetaField类型约束
+
+#### 通用属性
+
+[cols="1,2,4"]
+|===
+|名称|功能|备注
+|name
+|属性名称
+|非空、唯一
+|type
+|类型
+|
+|locale
+|本地化翻译
+|可空(如空则使用name值)
+|flex
+|表格占比
+|默认值1，最大值10
+|widget
+|控件类型
+|如：boolean可以使用radio或下拉进行展示
+|nullable
+|是否可空
+|
+|===
+
+NOTE: String, Date, boolean和数值类型(byte, int, float, double)均支持的约束
+
+#### 字符串约束
+
+[cols="1,2,4"]
+|===
+|名称|功能|备注
+|min
+|最短长度
+|
+|max
+|最长长度
+|
+|unique
+|是否唯一
+|
+|email
+|邮件
+|
+|mobile
+|手机
+|
+|mask
+|是否回显
+|主要用于密码或敏感信息的输入
+|inList
+|允许值列表
+|
+|matches
+|正则
+|输入需要匹配的REGEX
+|===
+
+#### 数字约束
+
+[cols="1,2,4"]
+|===
+|名称|功能|备注
+|min
+|最小值
+|
+|max
+|最大值
+|
+|unique
+|是否唯一
+|不支持：float和double
+|decimalSize
+|小数点后位数
+|仅支持：float和double
+|===
+
+#### 日期约束
+
+[cols="1,2,4"]
+|===
+|名称|功能|备注
+|min
+|最小值
+|
+|max
+|最大值
+|
+|unique
+|是否唯一
+|不支持：float和double
+|format
+|日期格式
+|格式需要支持SimpleDateFormat解析，如："yyyy-MM-dd HH:mm"
+|===
