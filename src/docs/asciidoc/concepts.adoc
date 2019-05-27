@@ -59,7 +59,7 @@ class Student{
 
 TIP: 该部分语法和约束可以参考 http://gorm.grails.org/doc[GORM]
 
-### 布局DSL(LayoutDSL)
+### 界面构建DSL
 
 该模块主要用于定义UI模板，主要包括：
 

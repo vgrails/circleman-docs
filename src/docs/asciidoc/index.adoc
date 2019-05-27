@@ -25,8 +25,12 @@ include::concepts.adoc[]
 include::config.adoc[]
 
 [[models]]
-== 元模型
+== 元模型 DSL
 include::models.adoc[]
+
+[[orm_internal]]
+== 内部ORM
+include::orm_internal.adoc[]
 
 [[tutorial]]
 == 快速上手

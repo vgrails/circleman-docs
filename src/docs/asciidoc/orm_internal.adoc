@@ -1,0 +1,238 @@
+:!webfonts:
+:imagesdir: ./images
+:sectnums:
+
+### 功能与目标
+
+内部ORM主要封装Gorm和HQL的部分功能，向上层框架提供：
+
+* 类型无关的可运行时动态生成的语法
+* 基于DSL的CRUD操作框架
+* 类型转换和约束校验
+
+CAUTION: 该模块功能主要用于框架运行时动态代码，不应该用于正常的业务开发
+
+CAUTION: 该模块的代码均不内置异常处理，要求业务模块执行catch异常
+
+TIP: 正常业务开发应使用GORM的动态查找函数(Dynamic Finder)、Criteria或HQL
+
+### 支持数据类型
+
+[cols="1,2,4"]
+|===
+|名称|简介|备注
+|char
+|字符类型
+|内部当做长度为1的字符串
+|byte
+|字节类型
+|
+|short
+|短整型
+|
+|int
+|整形
+|不支持 nullable 约束
+|Integer
+|整形对象
+|支持 nullable 约束
+|long
+|长整形
+|不支持 nullable 约束
+|Long
+|长整形对象
+|支持 nullable 约束
+|float
+|浮点型
+|不支持 nullable 约束
+|Float
+|浮点对象
+|支持 nullable 约束
+|double
+|双精度浮点型
+|不支持 nullable 约束
+|Double
+|双精度浮点对象
+|支持 nullable 约束
+|Boolean
+|布尔对象
+|支持 nullable 约束
+|String
+|字符
+|支持 nullable, matches, inList, mask, min, max, unique, like 等约束
+|Date
+|日期时间
+|支持 format, min, max, unique, nullable, between 等约束
+|===
+
+CAUTION: 暂不支持boolean类型
+
+### 基础操作
+
+#### 新增(Add)
+
+场景：创建对象，返回对象ID
+
+示例：
+[source,groovy]
+----
+long id = new Orm().domain("TestDateBooleanChar").attributes( <1>
+    boolean1: true,
+    char1: 'e' as char, <2>
+    date: new SimpleDateFormat("yyyy-MM-dd").parse("2009-10-22") <3>
+).create()
+----
+<1> 指定创建对象的类型和属性
+<2> 对于属性需要保证提供初始值与属性类型匹配，通过 AS 进行强制转换
+<3> Date类型的构造范例
+
+TIP: 操作异常返回 `-1`
+
+#### 更新(Update)
+
+场景：更新对象，返回对象ID
+
+示例：
+[source,groovy]
+----
+long id = new Orm().domain("Organization").id(1).attributes( <1>
+    name: "工程", <2>
+    description:"工程汉子多如牛")
+.update()
+----
+<1> 指定更新对象的类型和ID
+<2> 提供待更新的属性清单
+
+TIP: 操作异常返回 `-1`
+
+#### 删除(Delete)
+
+场景：删除对象，返回操作是否成功
+
+示例：
+[source,groovy]
+----
+boolean success = new Orm().domain("TestNumberic").id(2).delete() <1>
+----
+<1> 指定更新对象的类型和ID
+
+#### 详情(Get)
+
+场景：获取单个对象的所有信息
+
+示例：
+[source,groovy]
+----
+TestDateBooleanChar.withTransaction { <1>
+    println new Orm().domain("TestDateBooleanChar").id(2).get() <2>
+}
+----
+<1> 提供事务
+<2> 根据指定ID获取详情
+
+CAUTION: 目前Get操作需要使用withTransaction包裹，可能是GORM的BUG
+
+### 查询(Query)
+
+查询支持以下功能：
+
+* 单一条件过滤
+* 单一条件排序
+* 分页
+
+#### 查询关键参数：
+
+[cols="1,2,4"]
+|===
+|名称|含义|备注
+|max
+|最大返回记录数
+|分页大小
+|offset
+|偏移
+|用于跳过分页
+|orderBy
+|排序字段
+|
+|direction
+|排序方向
+|取值: asc, desc
+|filter
+|过滤字段
+|
+|op
+|过滤操作符
+|取值: lt, le, eq, ge, gt, ne, like, between
+|p1
+|过滤操作数1
+|
+|p2
+|过滤操作数2
+|除between外，无需设置
+|===
+
+#### 简单查询
+
+简单示例：
+[source,groovy]
+----
+def list = new Orm().domain("TestDateBooleanChar").query() <1>
+
+for(TestDateBooleanChar t in list){
+    println "${t.id} date:${t.date} boolean:${t.boolean1} char:${t.char1}" <2>
+}
+----
+<1> 创建并执行查询
+<2> 使用查询结果
+
+#### 带过滤查询
+
+带过滤示例：
+[source,groovy]
+----
+def list = new Orm().domain("TestDateBooleanChar")
+    .filter("date") <1>
+    .op("between") <2>
+    .p1(new SimpleDateFormat("yyyy-MM-dd").parse("2009-10-22")) <3>
+    .p2(new SimpleDateFormat("yyyy-MM-dd").parse("2009-10-24"))
+    .query() <4>
+----
+<1> 过滤字段
+<2> 过滤OP
+<3> 过滤操作数
+<4> 执行
+
+#### 带排序查询
+
+[source,groovy]
+----
+list= new Orm().domain("TestNumberic")
+    .max(10) <1>
+    .offset(5) <2>
+    .filter("byte1")
+    .op("le")
+    .p1(15 as byte)
+    .orderBy("int1") <3>
+    .direction("desc") <4>
+    .query()
+----
+<1> 分页大小
+<2> 偏移
+<3> 排序字段
+<4> 排序方向
+
+#### 计数(Count)
+
+简单示例：
+[source,groovy]
+----
+long num = new Orm().domain("TestNumberic").count() <1>
+
+long num_filter = new Orm().domain("TestNumberic") <2>
+    .filter("byte1")
+    .op("le")
+    .p1(15 as byte)
+    .count()
+----
+<1> 创建并执行计数
+<2> 执行带过滤的计数
